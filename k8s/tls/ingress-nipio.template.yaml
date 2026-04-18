@@ -1,0 +1,49 @@
+# nip.io Ingress with cert-manager auto-issued Let's Encrypt certs.
+#
+# __LB_IP__ is substituted by k8s/tls/apply.sh (envsubst). After substitution,
+# hostnames look like: app-1-2-3-4.nip.io and api-1-2-3-4.nip.io.
+# nip.io resolves these to 1.2.3.4 with no DNS config on your side.
+#
+# NOTE: we use dash-separated IP form (`1-2-3-4`) so the hostname has only
+# two labels after `.nip.io`; this keeps the cert CN short and avoids any
+# wildcard concerns.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: snap2spoon
+  namespace: snap2spoon
+  annotations:
+    # Start with staging to verify the flow works without hitting rate limits.
+    # Flip to letsencrypt-prod once synthetics can reach the staging endpoint.
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - app-__LB_IP__.nip.io
+        - api-__LB_IP__.nip.io
+      secretName: snap2spoon-tls
+  rules:
+    - host: app-__LB_IP__.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+    - host: api-__LB_IP__.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000

@@ -1,0 +1,38 @@
+# Let's Encrypt ClusterIssuers using the HTTP-01 challenge through
+# ingress-nginx. Works with nip.io because nip.io resolves any
+# <anything>.<IP>.nip.io to <IP>, so Let's Encrypt's HTTP validator hits
+# your load balancer and ingress-nginx serves the challenge response.
+#
+# Use the staging issuer first — Let's Encrypt production has strict
+# rate limits (5 duplicate certs/week, 50 certs/domain/week). Staging
+# certs are NOT trusted by browsers, but they prove the flow works.
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: you@example.com            # <-- change before applying
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: you@example.com            # <-- change before applying
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx

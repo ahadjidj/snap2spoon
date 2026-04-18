@@ -22,6 +22,10 @@ kubectl apply -f ingress.yaml
 kubectl apply -f networkpolicy.yaml
 ```
 
+**On GKE + nip.io?** Skip `ingress.yaml` and use `tls/` instead — it sets up
+publicly-trusted HTTPS via Let's Encrypt with no domain to manage. See
+[`tls/README.md`](tls/README.md).
+
 ## Observability
 
 All three services already expose themselves to OpenTelemetry
