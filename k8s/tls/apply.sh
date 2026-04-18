@@ -23,12 +23,12 @@ if [[ -z "$ip" ]]; then
 fi
 
 dashed="${ip//./-}"
-app_host="app-${dashed}.nip.io"
-api_host="api-${dashed}.nip.io"
+host="snap2spoon-${dashed}.nip.io"
 
 echo "Using LB IP: $ip"
-echo "  frontend:  https://$app_host"
-echo "  api:       https://$api_host"
+echo "  app URL:           https://$host"
+echo "  api health (for"
+echo "  synthetic monitor): https://$host/api/health"
 echo
 
 kubectl apply -f "$here/cluster-issuer.yaml"

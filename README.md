@@ -2,6 +2,10 @@
 
 Turn Instagram recipe videos into structured written recipes you can search, rate, comment on, and bookmark.
 
+> **New here?** Follow [**SETUP.md**](SETUP.md) for a detailed step-by-step
+> walkthrough — local dev, GKE deploy with a trusted HTTPS URL, and Google
+> Sign-In.
+
 ## Architecture
 
 Three services, all OpenTelemetry auto-instrumentation ready (no manual spans):

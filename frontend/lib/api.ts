@@ -1,5 +1,9 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Browser: always same-origin /api (proxied by Next.js rewrites).
+// Server (SSR): direct to the api-service via cluster DNS / docker network.
+const API_URL =
+  typeof window === "undefined"
+    ? process.env.API_URL_INTERNAL || "http://api:8000"
+    : "/api";
 
 export type Ingredient = { name: string; quantity?: string | null; notes?: string | null };
 

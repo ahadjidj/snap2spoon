@@ -50,7 +50,9 @@ services:
   frontend:
     build: ./frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      # Server-side (SSR) calls go direct to the api service.
+      # Browser calls go to same-origin /api, which Next.js proxies here too.
+      API_URL_INTERNAL: http://api:8000
       OTEL_SERVICE_NAME: snap2spoon-frontend
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:

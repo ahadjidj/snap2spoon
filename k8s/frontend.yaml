@@ -38,13 +38,17 @@ spec:
           env:
             - name: OTEL_SERVICE_NAME
               value: snap2spoon-frontend
-            - name: NEXT_PUBLIC_API_URL
-              # Browser-facing. Adjust to your public domain.
-              value: "https://api.snap2spoon.example.com"
+            # Server-side fetches go here. Browser always hits /api on the
+            # frontend origin (proxied via Next.js rewrites), so there's no
+            # public API URL to configure.
+            - name: API_URL_INTERNAL
+              value: "http://api.snap2spoon.svc.cluster.local:8000"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               valueFrom: { configMapKeyRef: { name: snap2spoon-config, key: OTEL_EXPORTER_OTLP_ENDPOINT } }
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               valueFrom: { configMapKeyRef: { name: snap2spoon-config, key: OTEL_EXPORTER_OTLP_PROTOCOL } }
+            - name: OTEL_TRACES_EXPORTER
+              valueFrom: { configMapKeyRef: { name: snap2spoon-config, key: OTEL_TRACES_EXPORTER } }
           readinessProbe:
             httpGet: { path: /, port: 3000 }
             initialDelaySeconds: 10

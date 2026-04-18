@@ -11,11 +11,13 @@ data:
   # Secret). The api-service uses it as the expected token audience; the
   # frontend fetches it from /config to render the Sign-In button.
   GOOGLE_CLIENT_ID: "replace-me.apps.googleusercontent.com"
-  # OpenTelemetry — auto instrumentation picks these up, no code changes.
+  # OpenTelemetry — disabled by default so you don't get connection errors
+  # when no collector is installed. To enable: change exporters to "otlp",
+  # and set OTEL_EXPORTER_OTLP_ENDPOINT to your collector URL.
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc:4318"
   OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-  OTEL_TRACES_EXPORTER: "otlp"
-  OTEL_METRICS_EXPORTER: "otlp"
-  OTEL_LOGS_EXPORTER: "otlp"
+  OTEL_TRACES_EXPORTER: "none"
+  OTEL_METRICS_EXPORTER: "none"
+  OTEL_LOGS_EXPORTER: "none"
   POSTGRES_USER: "snap2spoon"
   POSTGRES_DB: "snap2spoon"
