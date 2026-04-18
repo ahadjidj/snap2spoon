@@ -20,6 +20,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://snap2spoon:snap2spoon@postgres:5432/snap2spoon
       JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       ANALYZER_URL: http://analyzer:8001
       CORS_ORIGINS: "*"
       OTEL_SERVICE_NAME: snap2spoon-api

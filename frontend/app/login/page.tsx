@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -30,7 +31,13 @@ export default function LoginPage() {
     <div className="mx-auto max-w-md pt-10">
       <h1 className="font-display text-4xl">Welcome back</h1>
       <p className="mt-1 text-ink/60">Log in to save and rate recipes.</p>
-      <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
+
+      <div className="mt-6 flex justify-center">
+        <GoogleSignInButton redirectTo="/dashboard" />
+      </div>
+      <Divider />
+
+      <form onSubmit={submit} className="flex flex-col gap-3">
         <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -39,6 +46,16 @@ export default function LoginPage() {
       <p className="mt-4 text-sm text-ink/60">
         No account? <Link href="/signup" className="underline">Sign up</Link>
       </p>
+    </div>
+  );
+}
+
+function Divider() {
+  return (
+    <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wider text-ink/40">
+      <span className="h-px flex-1 bg-black/10" />
+      or
+      <span className="h-px flex-1 bg-black/10" />
     </div>
   );
 }

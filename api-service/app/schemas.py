@@ -15,11 +15,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLogin(BaseModel):
+    id_token: str
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     email: EmailStr
     username: str
+    avatar_url: str | None = None
     created_at: datetime
 
 

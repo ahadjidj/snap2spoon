@@ -67,6 +67,8 @@ spec:
               valueFrom: { secretKeyRef: { name: snap2spoon-secrets, key: POSTGRES_PASSWORD } }
             - name: JWT_SECRET
               valueFrom: { secretKeyRef: { name: snap2spoon-secrets, key: JWT_SECRET } }
+            - name: GOOGLE_CLIENT_ID
+              valueFrom: { configMapKeyRef: { name: snap2spoon-config, key: GOOGLE_CLIENT_ID } }
             - name: DATABASE_URL
               value: "postgresql+psycopg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres.snap2spoon.svc:5432/$(POSTGRES_DB)"
           readinessProbe:

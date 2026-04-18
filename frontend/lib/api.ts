@@ -24,7 +24,14 @@ export type Recipe = {
   bookmarked: boolean;
 };
 
-export type User = { id: number; email: string; username: string; created_at: string };
+export type User = {
+  id: number;
+  email: string;
+  username: string;
+  avatar_url?: string | null;
+  created_at: string;
+};
+export type PublicConfig = { google_client_id: string | null };
 export type Token = { access_token: string; token_type: string; user: User };
 export type Comment = { id: number; user_id: number; username: string; body: string; created_at: string };
 export type Stats = { recipes_extracted: number; minutes_saved: number; hours_saved: number };
@@ -53,7 +60,10 @@ export const api = {
     request<Token>("/users/signup", { body: { email, username, password } }),
   login: (email: string, password: string) =>
     request<Token>("/users/login", { body: { email, password } }),
+  googleLogin: (idToken: string) =>
+    request<Token>("/users/google", { body: { id_token: idToken } }),
   me: (token: string) => request<User>("/users/me", { token }),
+  publicConfig: () => request<PublicConfig>("/config"),
 
   analyze: (url: string, token: string | null) =>
     request<{ is_recipe: boolean; reason: string | null; recipe: Recipe | null }>(

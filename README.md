@@ -48,6 +48,23 @@ kubectl apply -f k8s/
 
 See `k8s/README.md` for details.
 
+## Google Sign-In
+
+Users can sign up / log in with a Google account, no password needed.
+
+1. In Google Cloud Console, create an **OAuth 2.0 Client ID** (type: *Web
+   application*). Authorized JavaScript origins must include every domain the
+   frontend is served from (e.g. `http://localhost:3000`,
+   `https://snap2spoon.example.com`).
+2. Put the client ID in the `GOOGLE_CLIENT_ID` env var for both `api-service`
+   (for token verification) and the frontend (via `/config` — fetched at
+   runtime, so no rebuild needed).
+3. The `api-service` exposes `POST /users/google` which accepts a Google ID
+   token and returns a snap2spoon JWT. First-time users are auto-provisioned.
+
+Only the ID token is verified server-side; the client ID itself is public
+and lives in the `snap2spoon-config` ConfigMap (not in Secrets).
+
 ## Claude API key
 
 Set `ANTHROPIC_API_KEY` in the `snap2spoon-secrets` Secret. The analyzer calls

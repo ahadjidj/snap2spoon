@@ -20,7 +20,18 @@ export default function Navbar() {
             <Link href="/dashboard" className="btn-ghost">
               My kitchen
             </Link>
-            <span className="hidden sm:inline text-ink/60">@{user.username}</span>
+            <span className="hidden sm:flex items-center gap-2 text-ink/60">
+              {user.avatar_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatar_url}
+                  alt=""
+                  className="h-7 w-7 rounded-full border border-black/10 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              @{user.username}
+            </span>
             <button onClick={logout} className="btn-ghost">
               Log out
             </button>

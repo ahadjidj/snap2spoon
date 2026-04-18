@@ -9,6 +9,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.17
 httpx==0.28.0
 email-validator==2.2.0
+google-auth==2.35.0
 opentelemetry-distro==0.49b2
 opentelemetry-exporter-otlp==1.28.2
 opentelemetry-instrumentation-fastapi==0.49b2

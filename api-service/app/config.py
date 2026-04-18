@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     jwt_ttl_minutes: int = 60 * 24 * 7
     analyzer_url: str = "http://analyzer:8001"
     cors_origins: str = "*"
+    google_client_id: str = ""
     # Average minutes a human spends watching + transcribing one recipe video.
     # Used to compute the "time saved" counter.
     minutes_saved_per_recipe: float = 7.0

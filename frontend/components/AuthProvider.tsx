@@ -7,6 +7,7 @@ type AuthState = {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, username: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 };
@@ -51,6 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persist(access_token, user);
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const { access_token, user } = await api.googleLogin(idToken);
+    persist(access_token, user);
+  }, []);
+
   const logout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
     setToken(null);
@@ -58,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthCtx.Provider value={{ user, token, login, signup, logout, loading }}>
+    <AuthCtx.Provider value={{ user, token, login, signup, loginWithGoogle, logout, loading }}>
       {children}
     </AuthCtx.Provider>
   );

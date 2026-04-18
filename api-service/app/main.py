@@ -40,3 +40,10 @@ app.include_router(stats.router, prefix="/stats", tags=["stats"])
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/config")
+def public_config():
+    """Client-safe config. Exposes the Google OAuth client ID so the frontend
+    can render the Google Sign-In button without baking the ID into the image."""
+    return {"google_client_id": settings.google_client_id or None}

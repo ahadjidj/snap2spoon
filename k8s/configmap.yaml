@@ -7,6 +7,10 @@ data:
   ANALYZER_URL: "http://analyzer:8001"
   CORS_ORIGINS: "*"
   ANTHROPIC_MODEL: "claude-sonnet-4-6"
+  # Google OAuth client ID is a public identifier. Keep it here (not in the
+  # Secret). The api-service uses it as the expected token audience; the
+  # frontend fetches it from /config to render the Sign-In button.
+  GOOGLE_CLIENT_ID: "replace-me.apps.googleusercontent.com"
   # OpenTelemetry — auto instrumentation picks these up, no code changes.
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc:4318"
   OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
