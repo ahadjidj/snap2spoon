@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: snap2spoon-config
+  namespace: snap2spoon
+data:
+  ANALYZER_URL: "http://analyzer:8001"
+  CORS_ORIGINS: "*"
+  ANTHROPIC_MODEL: "claude-sonnet-4-6"
+  # OpenTelemetry — auto instrumentation picks these up, no code changes.
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc:4318"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+  OTEL_TRACES_EXPORTER: "otlp"
+  OTEL_METRICS_EXPORTER: "otlp"
+  OTEL_LOGS_EXPORTER: "otlp"
+  POSTGRES_USER: "snap2spoon"
+  POSTGRES_DB: "snap2spoon"

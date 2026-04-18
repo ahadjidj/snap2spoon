@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-snap2spoon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snap2spoon}
+      POSTGRES_DB: ${POSTGRES_DB:-snap2spoon}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://snap2spoon:snap2spoon@postgres:5432/snap2spoon
+      JWT_SECRET: ${JWT_SECRET:-dev-secret}
+      ANALYZER_URL: http://analyzer:8001
+      CORS_ORIGINS: "*"
+      OTEL_SERVICE_NAME: snap2spoon-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-none}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-none}
+      OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-none}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  analyzer:
+    build: ./analyzer-service
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: claude-sonnet-4-6
+      OTEL_SERVICE_NAME: snap2spoon-analyzer
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-none}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-none}
+      OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-none}
+    ports:
+      - "8001:8001"
+
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      OTEL_SERVICE_NAME: snap2spoon-frontend
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  pg-data:
