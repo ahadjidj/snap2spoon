@@ -1,18 +1,20 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_PROGRESS_BAR=off
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ffmpeg ca-certificates \
+RUN mkdir -p /var/cache/apt/archives/partial \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt && \
-    opentelemetry-bootstrap -a install
+RUN pip install --progress-bar off -r requirements.txt && \
+    PIP_PROGRESS_BAR=off opentelemetry-bootstrap -a install
 
 COPY app ./app
 

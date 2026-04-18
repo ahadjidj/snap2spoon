@@ -24,7 +24,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     google_sub: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True)
-    avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     recipes: Mapped[list["Recipe"]] = relationship(back_populates="owner")
@@ -38,10 +38,10 @@ class Recipe(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    source_url: Mapped[str] = mapped_column(String(512), index=True)
+    source_url: Mapped[str] = mapped_column(Text, index=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    thumbnail_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    thumbnail_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     servings: Mapped[str | None] = mapped_column(String(64), nullable=True)
     prep_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cook_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)

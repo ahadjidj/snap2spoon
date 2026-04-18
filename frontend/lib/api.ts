@@ -75,9 +75,10 @@ export const api = {
       { body: { url }, token },
     ),
 
-  listRecipes: (opts: { q?: string; mine?: boolean; bookmarked?: boolean; token?: string | null } = {}) => {
+  listRecipes: (opts: { q?: string; sort?: string; mine?: boolean; bookmarked?: boolean; token?: string | null } = {}) => {
     const params = new URLSearchParams();
     if (opts.q) params.set("q", opts.q);
+    if (opts.sort) params.set("sort", opts.sort);
     if (opts.mine) params.set("mine", "true");
     if (opts.bookmarked) params.set("bookmarked", "true");
     const qs = params.toString();

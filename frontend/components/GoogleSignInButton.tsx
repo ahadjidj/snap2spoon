@@ -13,7 +13,6 @@ declare global {
             client_id: string;
             callback: (response: { credential: string }) => void;
             auto_select?: boolean;
-            use_fedcm_for_prompt?: boolean;
           }) => void;
           renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
         };
@@ -62,7 +61,6 @@ export default function GoogleSignInButton({ redirectTo = "/dashboard" }: { redi
 
         window.google.accounts.id.initialize({
           client_id: cfg.google_client_id,
-          use_fedcm_for_prompt: true,
           callback: async ({ credential }) => {
             try {
               await loginWithGoogle(credential);

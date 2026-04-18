@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -7,8 +7,8 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt && \
-    opentelemetry-bootstrap -a install
+RUN pip install --progress-bar off -r requirements.txt && \
+    PIP_PROGRESS_BAR=off opentelemetry-bootstrap -a install
 
 COPY app ./app
 

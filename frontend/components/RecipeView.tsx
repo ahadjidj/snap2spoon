@@ -41,7 +41,7 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
         <div className="relative aspect-[4/5] w-full bg-cream">
           {recipe.thumbnail_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={recipe.thumbnail_url} alt={recipe.title} className="h-full w-full object-cover" />
+            <img src={`/api/thumbnail?url=${encodeURIComponent(recipe.thumbnail_url)}`} alt={recipe.title} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-7xl">🍳</div>
           )}

@@ -16,7 +16,6 @@ export default async function Home() {
       <section className="relative grid-cols-1 overflow-hidden rounded-[2.5rem] bg-cream px-6 py-14 sm:px-12 lg:py-20">
         <div className="grain absolute inset-0 opacity-40" />
         <div className="relative mx-auto max-w-3xl text-center">
-          <span className="chip">Powered by Claude</span>
           <h1 className="mt-5 font-display text-5xl leading-[1.05] sm:text-6xl">
             Turn Instagram reels into <span className="text-spoon">real recipes.</span>
           </h1>
@@ -61,7 +60,7 @@ export default async function Home() {
             Drop any instagram.com reel or post URL into the box above.
           </Step>
           <Step n="2" title="We watch it for you">
-            The analyzer samples frames and asks Claude whether it's a recipe and, if so,
+            The analyzer samples frames and asks our AI whether it's a recipe and, if so,
             to transcribe it.
           </Step>
           <Step n="3" title="Cook, rate, save">

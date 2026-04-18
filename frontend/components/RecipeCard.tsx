@@ -13,7 +13,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         {recipe.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={recipe.thumbnail_url}
+            src={`/api/thumbnail?url=${encodeURIComponent(recipe.thumbnail_url)}`}
             alt={recipe.title}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />

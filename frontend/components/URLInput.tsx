@@ -53,7 +53,7 @@ export default function URLInput() {
       </div>
       {loading && (
         <p className="mt-3 text-sm text-ink/60">
-          Downloading frames and asking Claude what's cooking. This usually takes 10–30 seconds.
+          Downloading frames and asking our AI what's cooking. This usually takes 10–30 seconds.
         </p>
       )}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

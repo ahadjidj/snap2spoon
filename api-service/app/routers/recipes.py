@@ -83,10 +83,16 @@ def list_recipes(
     q: str | None = None,
     mine: bool = False,
     bookmarked: bool = False,
+    sort: str = Query("date_desc", pattern="^(date_desc|date_asc|rating)$"),
     limit: int = Query(30, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
-    query = db.query(Recipe)
+    avg_sub = (
+        db.query(Rating.recipe_id, func.avg(Rating.score).label("avg_rating"))
+        .group_by(Rating.recipe_id)
+        .subquery()
+    )
+    query = db.query(Recipe).outerjoin(avg_sub, avg_sub.c.recipe_id == Recipe.id)
     if mine:
         if not viewer:
             raise HTTPException(status_code=401, detail="Login required")
@@ -100,7 +106,13 @@ def list_recipes(
     if q:
         like = f"%{q.lower()}%"
         query = query.filter(func.lower(Recipe.title).like(like))
-    recipes = query.order_by(desc(Recipe.created_at)).offset(offset).limit(limit).all()
+    if sort == "rating":
+        query = query.order_by(desc(func.coalesce(avg_sub.c.avg_rating, 0)))
+    elif sort == "date_asc":
+        query = query.order_by(Recipe.created_at)
+    else:
+        query = query.order_by(desc(Recipe.created_at))
+    recipes = query.offset(offset).limit(limit).all()
     return [_enrich(db, r, viewer) for r in recipes]
 
 
