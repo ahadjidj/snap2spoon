@@ -95,7 +95,8 @@ local-dev keys you already set stay unchanged):
 ```bash
 # .env — GKE section
 GCP_PROJECT=your-gcp-project-id      # gcloud config get-value project
-GCP_REGION=us-central1
+GKE_REGION=us-central1               # region where the cluster runs
+AR_REGION=us-central1                # Artifact Registry region (can differ)
 LETS_ENCRYPT_EMAIL=you@example.com   # used by cert-manager for renewal alerts
 TLS_ISSUER=letsencrypt-staging       # switch to letsencrypt-prod for a trusted cert
 ```

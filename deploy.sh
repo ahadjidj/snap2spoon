@@ -18,9 +18,10 @@ set -euo pipefail
 : "${LETS_ENCRYPT_EMAIL:?Set LETS_ENCRYPT_EMAIL in .env}"
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-GCP_REGION="${GCP_REGION:-us-central1}"
+GKE_REGION="${GKE_REGION:-us-central1}"
+AR_REGION="${AR_REGION:-us-central1}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
-REGISTRY="${IMAGE_REGISTRY:-${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/snap2spoon}"
+REGISTRY="${IMAGE_REGISTRY:-${AR_REGION}-docker.pkg.dev/${GCP_PROJECT}/snap2spoon}"
 export TLS_ISSUER="${TLS_ISSUER:-letsencrypt-staging}"
 
 APPLY_ONLY="${1:-}"
@@ -28,7 +29,7 @@ APPLY_ONLY="${1:-}"
 # ── Build & push ──────────────────────────────────────────────────────────────
 if [[ "$APPLY_ONLY" != "--apply" ]]; then
   echo "==> Authenticating Docker to Artifact Registry"
-  gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+  gcloud auth configure-docker "${AR_REGION}-docker.pkg.dev" --quiet
 
   echo "==> Building images (tag: $IMAGE_TAG)"
   docker build -t "$REGISTRY/api:$IMAGE_TAG" api-service
