@@ -79,90 +79,41 @@ gcloud container clusters get-credentials snap2spoon --region=us-central1
 kubectl get nodes   # should show at least one node
 ```
 
-### 3.2 Build and push the three images
-
-Easiest registry: Artifact Registry in the same project.
+### 3.2 Create the Artifact Registry repo (one-time)
 
 ```bash
-# Create a Docker repo (one-time)
 gcloud artifacts repositories create snap2spoon \
   --repository-format=docker \
   --location=us-central1
-
-# Auth docker to it
-gcloud auth configure-docker us-central1-docker.pkg.dev
-
-# Build + push
-PROJECT=$(gcloud config get-value project)
-REGISTRY=us-central1-docker.pkg.dev/$PROJECT/snap2spoon
-
-docker build -t $REGISTRY/api:v1       api-service
-docker build -t $REGISTRY/analyzer:v1  analyzer-service
-docker build -t $REGISTRY/frontend:v1  frontend
-
-docker push $REGISTRY/api:v1
-docker push $REGISTRY/analyzer:v1
-docker push $REGISTRY/frontend:v1
 ```
 
-Now update the three Deployments to use your images. Edit `k8s/api-service.yaml`,
-`k8s/analyzer-service.yaml`, `k8s/frontend.yaml` and change each `image:` line:
+### 3.3 Configure `.env` for GKE
 
-```yaml
-# Before
-image: snap2spoon/api:latest
-# After (example)
-image: us-central1-docker.pkg.dev/your-project/snap2spoon/api:v1
-```
-
-### 3.3 Apply the base manifests
+Everything `deploy.sh` needs lives in your `.env`. Add these lines (the
+local-dev keys you already set stay unchanged):
 
 ```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-
-# Create your secrets. DO NOT edit secret.example.yaml — run this instead:
-kubectl -n snap2spoon create secret generic snap2spoon-secrets \
-  --from-literal=ANTHROPIC_API_KEY=sk-ant-YOUR_KEY \
-  --from-literal=JWT_SECRET=$(openssl rand -hex 32) \
-  --from-literal=POSTGRES_PASSWORD=$(openssl rand -hex 16)
-
-kubectl apply -f k8s/postgres.yaml
-kubectl apply -f k8s/api-service.yaml
-kubectl apply -f k8s/analyzer-service.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/networkpolicy.yaml
+# .env — GKE section
+GCP_PROJECT=your-gcp-project-id      # gcloud config get-value project
+GCP_REGION=us-central1
+LETS_ENCRYPT_EMAIL=you@example.com   # used by cert-manager for renewal alerts
+TLS_ISSUER=letsencrypt-staging       # switch to letsencrypt-prod for a trusted cert
 ```
 
-Check the pods come up:
+### 3.4 Install ingress-nginx + cert-manager (one-time per cluster)
 
 ```bash
-kubectl -n snap2spoon get pods -w
-# wait until every pod is Running / 1/1 Ready, then Ctrl+C
-```
-
-**Do not** apply `k8s/ingress.yaml` — we're using the nip.io ingress from
-the `tls/` overlay instead.
-
-### 3.4 Install ingress-nginx + cert-manager
-
-One-time per cluster.
-
-```bash
-# ingress-nginx
 helm upgrade --install ingress-nginx ingress-nginx \
   --repo https://kubernetes.github.io/ingress-nginx \
   --namespace ingress-nginx --create-namespace
 
-# cert-manager (includes its CRDs)
 helm upgrade --install cert-manager cert-manager \
   --repo https://charts.jetstack.io \
   --namespace cert-manager --create-namespace \
   --set crds.enabled=true
 ```
 
-Wait for ingress-nginx to get a public IP — this is what your nip.io URL
-will be built from:
+Wait for ingress-nginx to get a public IP:
 
 ```bash
 kubectl -n ingress-nginx get svc ingress-nginx-controller -w
@@ -180,23 +131,23 @@ kubectl -n ingress-nginx get svc ingress-nginx-controller -w
 >   --set controller.service.loadBalancerIP=$IP
 > ```
 
-### 3.5 Issue the HTTPS certificate
-
-Open `k8s/tls/cluster-issuer.yaml` and replace both `you@example.com`
-placeholders with your real email (Let's Encrypt uses this to notify you if
-renewal ever breaks).
-
-Then:
+### 3.5 Deploy everything with one command
 
 ```bash
-cd k8s/tls
-./apply.sh
+bash deploy.sh
 ```
 
-The script prints your URL, e.g.:
+This single script:
+1. Authenticates Docker to Artifact Registry
+2. Builds and pushes the three images
+3. Creates/updates the Kubernetes secret from your `.env` values
+4. Applies all manifests (namespace, configmap, postgres, api, analyzer, frontend, networkpolicy)
+5. Issues the Let's Encrypt certificate via `k8s/tls/apply.sh`
+
+The script prints your URL at the end, e.g.:
 
 ```
-Using LB IP: 34.120.0.42
+Using LB IP: 34.120.0.42  (issuer: letsencrypt-staging)
   app URL:           https://snap2spoon-34-120-0-42.nip.io
   api health:        https://snap2spoon-34-120-0-42.nip.io/api/health
 ```
@@ -205,39 +156,34 @@ Watch the cert get issued (usually 30–90 seconds):
 
 ```bash
 kubectl -n snap2spoon describe certificate snap2spoon-tls
-# Look for: Status: ... Ready: True
+# Look for: Ready: True
 ```
 
-Visit your URL. You should see the snap2spoon homepage. The first time, the
-cert is from Let's Encrypt **Staging** — your browser will warn it's
-untrusted. That's expected; it proves the flow works.
+Visit your URL. The first time, the cert is from Let's Encrypt **Staging** —
+your browser will warn it's untrusted. That's expected; it proves the flow works.
 
-### 3.6 Switch to the real (trusted) Let's Encrypt cert
+### 3.6 Switch to the trusted Let's Encrypt cert
 
-Edit `k8s/tls/ingress-nipio.template.yaml` and change:
-
-```yaml
-cert-manager.io/cluster-issuer: "letsencrypt-staging"
-# to:
-cert-manager.io/cluster-issuer: "letsencrypt-prod"
-```
-
-Then re-apply and force a re-issue:
+In `.env`, change:
 
 ```bash
-./apply.sh
+TLS_ISSUER=letsencrypt-prod
+```
+
+Then re-deploy and force a re-issue:
+
+```bash
+bash deploy.sh --apply    # skip image rebuild, re-apply k8s only
 kubectl -n snap2spoon delete secret snap2spoon-tls
 ```
 
 cert-manager will request a new cert from Let's Encrypt Production. Watch
-`kubectl -n snap2spoon describe certificate snap2spoon-tls` again until
-`Ready: True`.
+`kubectl -n snap2spoon describe certificate snap2spoon-tls` until `Ready: True`.
 
 Now open `https://snap2spoon-<ip>.nip.io` — no browser warning. **This URL is
 what you point your synthetic monitor at.**
 
-For a simple health check, use `/api/health` — it returns
-`{"status":"ok"}`.
+For a simple health check, use `/api/health` — it returns `{"status":"ok"}`.
 
 ### 3.7 (Optional) Point a synthetic monitor at it
 

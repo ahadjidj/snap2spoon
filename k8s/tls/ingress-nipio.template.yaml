@@ -15,7 +15,7 @@ metadata:
   annotations:
     # Start with staging to verify the flow works without hitting rate
     # limits. Flip to letsencrypt-prod once it works.
-    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    cert-manager.io/cluster-issuer: "${TLS_ISSUER}"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
