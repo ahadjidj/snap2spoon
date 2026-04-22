@@ -25,6 +25,8 @@ services:
       CORS_ORIGINS: "*"
       OTEL_SERVICE_NAME: snap2spoon-api
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_PROPAGATORS: ${OTEL_PROPAGATORS:-tracecontext,baggage}
       OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-none}
       OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-none}
       OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-none}
@@ -41,6 +43,8 @@ services:
       ANTHROPIC_MODEL: claude-sonnet-4-6
       OTEL_SERVICE_NAME: snap2spoon-analyzer
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_PROPAGATORS: ${OTEL_PROPAGATORS:-tracecontext,baggage}
       OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-none}
       OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-none}
       OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-none}
@@ -48,13 +52,24 @@ services:
       - "8001:8001"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* vars are baked into the client bundle at build time.
+        # Set these in .env before running `docker compose up --build` to activate Faro.
+        NEXT_PUBLIC_FARO_URL: ${NEXT_PUBLIC_FARO_URL:-}
+        NEXT_PUBLIC_FARO_APP_NAME: ${NEXT_PUBLIC_FARO_APP_NAME:-snap2spoon}
     environment:
       # Server-side (SSR) calls go direct to the api service.
       # Browser calls go to same-origin /api, which Next.js proxies here too.
       API_URL_INTERNAL: http://api:8000
       OTEL_SERVICE_NAME: snap2spoon-frontend
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_PROPAGATORS: ${OTEL_PROPAGATORS:-tracecontext,baggage}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-none}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-none}
+      OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-none}
     depends_on:
       - api
     ports:

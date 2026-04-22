@@ -69,6 +69,70 @@ Users can sign up / log in with a Google account, no password needed.
 Only the ID token is verified server-side; the client ID itself is public
 and lives in the `snap2spoon-config` ConfigMap (not in Secrets).
 
+## Observability
+
+All instrumentation is bundled and running in every service but exports nothing by default. Each layer is activated independently via environment variables — no code changes needed.
+
+### Backend traces, metrics, and logs (OTel)
+
+All three services run under OTel auto-instrumentation:
+
+| Service | Instrumented libraries |
+|---|---|
+| `api-service` | FastAPI, SQLAlchemy, httpx, psycopg, logging |
+| `analyzer-service` | FastAPI, httpx, logging |
+| `frontend` (SSR) | Node.js HTTP, fetch (outgoing SSR requests) |
+
+W3C `traceparent` headers are propagated automatically between services — the `api-service → analyzer-service` leg is connected without any code changes.
+
+**To enable** (local or K8s): set these env vars and restart/redeploy:
+
+```bash
+OTEL_TRACES_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://<alloy-or-collector>:4318   # OTLP HTTP
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+# Optional — enable metrics and logs too:
+OTEL_METRICS_EXPORTER=otlp
+OTEL_LOGS_EXPORTER=otlp
+```
+
+For **Kubernetes**, update `k8s/configmap.yaml`:
+- Change `OTEL_TRACES_EXPORTER` (and metrics/logs) from `"none"` to `"otlp"`
+- Update `OTEL_EXPORTER_OTLP_ENDPOINT` to your Alloy receiver address
+
+### Browser observability (Grafana Faro)
+
+The frontend includes [Grafana Faro](https://grafana.com/oss/faro/) for browser-side monitoring: page load performance, web vitals, JS errors, console logs, and browser-to-server distributed traces.
+
+Faro is **inactive by default** — it initialises only when `NEXT_PUBLIC_FARO_URL` is set.
+
+**To enable:**
+
+1. In Grafana Cloud, go to **Frontend Observability** → create or open your app → **Setup** → copy the collector URL.
+
+2. Set the vars **before building** the frontend image (`NEXT_PUBLIC_*` vars are baked into the JS bundle at build time):
+
+   ```bash
+   # .env
+   NEXT_PUBLIC_FARO_URL=https://faro-collector-xxx.grafana.net/collect/xxx
+   NEXT_PUBLIC_FARO_APP_NAME=snap2spoon   # optional, defaults to "snap2spoon"
+   ```
+
+3. Rebuild the frontend:
+   ```bash
+   docker compose up --build frontend
+   ```
+
+   For **Kubernetes**, pass the vars as Docker build args when building and pushing the image:
+   ```bash
+   docker build \
+     --build-arg NEXT_PUBLIC_FARO_URL=https://... \
+     --build-arg NEXT_PUBLIC_FARO_APP_NAME=snap2spoon \
+     -t your-registry/snap2spoon-frontend:latest ./frontend
+   ```
+
+Once both layers are active, a single user action (e.g. pasting a recipe URL) produces a trace that spans the browser → Next.js SSR → api-service → analyzer-service.
+
 ## Claude API key
 
 Set `ANTHROPIC_API_KEY` in the `snap2spoon-secrets` Secret. The analyzer calls

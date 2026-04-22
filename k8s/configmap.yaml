@@ -16,6 +16,7 @@ data:
   # and set OTEL_EXPORTER_OTLP_ENDPOINT to your collector URL.
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc:4318"
   OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+  OTEL_PROPAGATORS: "tracecontext,baggage"
   OTEL_TRACES_EXPORTER: "none"
   OTEL_METRICS_EXPORTER: "none"
   OTEL_LOGS_EXPORTER: "none"
