@@ -68,14 +68,15 @@ real Let's Encrypt certificate that every synthetic monitor trusts.
 Any small cluster works. Autopilot is cheapest to run:
 
 ```bash
+source .env   # pick up GKE_REGION / AR_REGION
 gcloud container clusters create-auto snap2spoon \
-  --region=us-central1
+  --region=$GKE_REGION
 ```
 
 (Takes ~5 minutes.) Then point `kubectl` at it:
 
 ```bash
-gcloud container clusters get-credentials snap2spoon --region=us-central1
+gcloud container clusters get-credentials snap2spoon --region=$GKE_REGION
 kubectl get nodes   # should show at least one node
 ```
 
@@ -84,7 +85,7 @@ kubectl get nodes   # should show at least one node
 ```bash
 gcloud artifacts repositories create snap2spoon \
   --repository-format=docker \
-  --location=us-central1
+  --location=$AR_REGION
 ```
 
 ### 3.3 Configure `.env` for GKE
@@ -124,8 +125,8 @@ kubectl -n ingress-nginx get svc ingress-nginx-controller -w
 > **Want the URL to stay the same if the LoadBalancer is ever recreated?**
 > Reserve a regional static IP in GCP and pass it to the helm install:
 > ```bash
-> gcloud compute addresses create snap2spoon-lb --region=us-central1
-> IP=$(gcloud compute addresses describe snap2spoon-lb --region=us-central1 --format='value(address)')
+> gcloud compute addresses create snap2spoon-lb --region=$GKE_REGION
+> IP=$(gcloud compute addresses describe snap2spoon-lb --region=$GKE_REGION --format='value(address)')
 > helm upgrade --install ingress-nginx ingress-nginx \
 >   --repo https://kubernetes.github.io/ingress-nginx \
 >   --namespace ingress-nginx \
