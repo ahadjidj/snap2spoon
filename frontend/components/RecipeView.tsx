@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Recipe } from "@/lib/api";
 import { api } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
@@ -8,8 +9,10 @@ import Comments from "./Comments";
 
 export default function RecipeView({ initial }: { initial: Recipe }) {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [recipe, setRecipe] = useState<Recipe>(initial);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function rate(score: number) {
     if (!token) return;
@@ -30,6 +33,18 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
       setRecipe((r) => ({ ...r, bookmarked: !r.bookmarked }));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteRecipe() {
+    if (!token) return;
+    if (!window.confirm("Delete this recipe? This can't be undone.")) return;
+    setDeleting(true);
+    try {
+      await api.deleteRecipe(recipe.id, token);
+      router.push("/dashboard");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -80,6 +95,15 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
           <a href={recipe.source_url} target="_blank" rel="noreferrer" className="text-sm underline text-ink/60">
             Original video ↗
           </a>
+          {user && user.id === recipe.owner_id && (
+            <button
+              onClick={deleteRecipe}
+              disabled={deleting}
+              className="btn-ghost text-red-600"
+            >
+              {deleting ? "Deleting…" : "Delete recipe"}
+            </button>
+          )}
         </div>
 
         <section className="mt-8">
