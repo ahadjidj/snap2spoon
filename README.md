@@ -14,7 +14,7 @@ Three services, all OpenTelemetry auto-instrumentation ready (no manual spans):
 |--------------------|--------------------------|-------------------------------------------------------------------------|
 | `frontend`         | Next.js 14 (TypeScript)  | UI, auth flow, pasting links, browsing/rating/commenting on recipes.    |
 | `api-service`      | Python 3.12 / FastAPI    | Users, recipes, ratings, comments, bookmarks, time-saved stats.         |
-| `analyzer-service` | Python 3.12 / FastAPI    | Downloads the Instagram video, extracts frames, calls Claude, returns a structured recipe. |
+| `analyzer-service` | Python 3.12 / FastAPI    | Downloads the Instagram video, extracts frames, transcribes the audio (faster-whisper), calls Claude, returns a structured recipe. |
 
 Postgres holds persistent data. Services communicate over HTTP inside the cluster.
 
@@ -136,6 +136,6 @@ Once both layers are active, a single user action (e.g. pasting a recipe URL) pr
 ## Claude API key
 
 Set `ANTHROPIC_API_KEY` in the `snap2spoon-secrets` Secret. The analyzer calls
-`claude-sonnet-4-6` with sampled video frames and a structured JSON schema
+`claude-sonnet-4-6` with sampled video frames, an audio transcript, and a structured JSON schema
 prompt to detect whether the clip is a recipe and, if so, extract ingredients,
 quantities, steps, prep/cook time, and servings.

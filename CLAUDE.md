@@ -52,7 +52,7 @@ api:8000 ← → postgres:5432
 
 **api-service** — FastAPI. Owns all persistence (users, recipes, ratings, comments, bookmarks, stats). Proxies analyze requests to the analyzer service. JWT auth (HS256, 7-day TTL). Google OAuth verified server-side via google-auth.
 
-**analyzer-service** — FastAPI. Accepts a URL, downloads the Instagram video with yt-dlp, extracts up to 8 frames with ffmpeg, sends frames + metadata to Claude, returns structured JSON. No auth — internal only, called exclusively by api-service. Temp files at `/tmp/snap2spoon/{uuid}/` are cleaned up after each job.
+**analyzer-service** — FastAPI. Accepts a URL, downloads the Instagram video with yt-dlp, extracts up to 8 frames with ffmpeg, transcribes the audio track with faster-whisper, sends frames + transcript + metadata to Claude, returns structured JSON. No auth — internal only, called exclusively by api-service. Temp files at `/tmp/snap2spoon/{uuid}/` are cleaned up after each job.
 
 ## Key Design Constraints
 
@@ -96,6 +96,8 @@ Manifests in `k8s/`. See `SETUP.md` for the full provisioning walkthrough.
 `analyzer-service/app/downloader.py` — only accepts `instagram.com` URLs (validated by regex). Uses yt-dlp with `format=mp4/best`, 30s socket timeout.
 
 `analyzer-service/app/frames.py` — extracts up to `MAX_FRAMES` (default 8) frames evenly spaced through the video, resized to `FRAME_MAX_PIXELS` (default 768px on the long side).
+
+`analyzer-service/app/transcribe.py` — extracts the audio track (16 kHz mono WAV) and transcribes it with faster-whisper on CPU, so spoken quantities/temperatures/timings reach the prompt. Best-effort: no audio, no speech, or any error yields `None` and the job continues on frames + caption. The model (`WHISPER_MODEL`, default `base`) is baked into the image at build time (`--build-arg WHISPER_MODEL=small` to change) and loaded once per process. Disable with `TRANSCRIBE_ENABLED=false`; pin a language with `WHISPER_LANGUAGE=en` (auto-detect can misfire on short clips).
 
 ## Google OAuth Notes
 

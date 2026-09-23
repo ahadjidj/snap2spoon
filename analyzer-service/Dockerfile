@@ -16,6 +16,15 @@ COPY requirements.txt .
 RUN pip install --progress-bar off -r requirements.txt && \
     PIP_PROGRESS_BAR=off opentelemetry-bootstrap -a install
 
+# Bake the Whisper model into the image so pods don't download it from
+# Hugging Face on the first request (and work without egress to HF).
+# Override with --build-arg WHISPER_MODEL=small for better accuracy (slower, ~2x RAM).
+ARG WHISPER_MODEL=base
+ENV WHISPER_MODEL=${WHISPER_MODEL} \
+    WHISPER_MODEL_DIR=/opt/whisper-models
+RUN python -c "import os; from faster_whisper.utils import download_model; \
+download_model(os.environ['WHISPER_MODEL'], cache_dir=os.environ['WHISPER_MODEL_DIR'])"
+
 COPY app ./app
 
 EXPOSE 8001

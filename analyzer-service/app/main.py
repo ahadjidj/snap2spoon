@@ -10,6 +10,7 @@ from .claude_client import analyze_frames
 from .config import settings
 from .downloader import DownloadError, download
 from .frames import extract_frames
+from .transcribe import transcribe
 
 logger = logging.getLogger("analyzer")
 app = FastAPI(title="snap2spoon analyzer", version="0.1.0")
@@ -43,7 +44,11 @@ def analyze(req: AnalyzeRequest):
         if not frames:
             raise HTTPException(status_code=500, detail="Could not extract frames from video")
 
-        result = analyze_frames(frames, caption=video.description, title=video.title)
+        transcript = transcribe(video.path, out_dir=job_dir / "audio")
+
+        result = analyze_frames(
+            frames, caption=video.description, title=video.title, transcript=transcript
+        )
         if not isinstance(result, dict) or "is_recipe" not in result:
             raise HTTPException(status_code=502, detail="Unexpected model output")
 
