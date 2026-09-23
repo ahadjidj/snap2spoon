@@ -140,11 +140,18 @@ bash deploy.sh
 ```
 
 This single script:
-1. Authenticates Docker to Artifact Registry
-2. Builds and pushes the three images
-3. Creates/updates the Kubernetes secret from your `.env` values
-4. Applies all manifests (namespace, configmap, postgres, api, analyzer, frontend, networkpolicy)
-5. Issues the Let's Encrypt certificate via `k8s/tls/apply.sh`
+1. Refuses to run unless `kubectl` points at `gke_${GCP_PROJECT}_<location>_${GKE_CLUSTER}`
+2. Authenticates Docker to Artifact Registry
+3. Builds the three images for `linux/amd64` (so it works from Apple Silicon)
+   and pushes them, tagged with the git commit (`<sha>` or `<sha>-dirty-<hash>`)
+4. Creates/updates the Kubernetes secret from your `.env` values
+5. Applies all manifests (namespace, configmap, postgres, api, analyzer, frontend,
+   networkpolicy), pointing the Deployments at the pushed tag and filling
+   `GOOGLE_CLIENT_ID` from `.env`
+6. Issues the Let's Encrypt certificate via `k8s/tls/apply.sh`
+
+`bash deploy.sh --apply` skips the build, keeps the images already running,
+and restarts the pods so config and secret changes take effect.
 
 The script prints your URL at the end, e.g.:
 
@@ -232,17 +239,11 @@ GOOGLE_CLIENT_ID=123456-abcdef.apps.googleusercontent.com
 
 Then restart `docker compose up`.
 
-**On GKE** — edit `k8s/configmap.yaml`:
-
-```yaml
-GOOGLE_CLIENT_ID: "123456-abcdef.apps.googleusercontent.com"
-```
-
-then apply and restart the api pods:
+**On GKE** — `deploy.sh` copies `GOOGLE_CLIENT_ID` from `.env` into the
+ConfigMap, so set it in `.env` as above and re-apply:
 
 ```bash
-kubectl apply -f k8s/configmap.yaml
-kubectl -n snap2spoon rollout restart deployment/api
+bash deploy.sh --apply
 ```
 
 The login + signup pages will now show a "Continue with Google" button.
@@ -254,7 +255,9 @@ First-time users get an account created automatically.
 
 | Symptom | What to check |
 |---|---|
-| `kubectl` works but pods are `ImagePullBackOff` | Did you update the `image:` fields in the three Deployments? Are they pushed and can the GKE nodes reach the registry? |
+| `kubectl` works but pods are `ImagePullBackOff` | Did `deploy.sh` finish pushing? Check the tag with `kubectl -n snap2spoon get deploy -o wide` and that the GKE nodes can reach the registry. |
+| Pods crash with `exec format error` | The image was built for arm64. Build with `--platform linux/amd64` (deploy.sh does this). |
+| Extraction shows "Internal Server Error" but the recipe appears later | The frontend proxy timed out. `experimental.proxyTimeout` in `frontend/next.config.js` must exceed the analyze time. |
 | Certificate stuck in `Not Ready` | `kubectl -n snap2spoon describe challenge` — look for HTTP-01 errors. Usually means the LB IP changed, or the ingress-nginx Service hasn't got an external IP yet. |
 | Extractor fails with `URL must be an instagram.com link` | That's the check in `analyzer-service/app/downloader.py`. Paste a full `https://www.instagram.com/...` URL. |
 | Extractor fails with a generic Instagram error | Instagram sometimes requires a logged-in session for video downloads. The scaffold uses `yt-dlp` without cookies, so private accounts and some reel variants won't download. |

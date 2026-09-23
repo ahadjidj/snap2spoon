@@ -1,6 +1,6 @@
 # nip.io Ingress with a cert-manager-issued Let's Encrypt certificate.
 #
-# __LB_IP__ is substituted by k8s/tls/apply.sh. After substitution the
+# ${LB_IP} is substituted by k8s/tls/apply.sh. After substitution the
 # hostname looks like: snap2spoon-1-2-3-4.nip.io (nip.io resolves it to
 # 1.2.3.4 with no DNS config on your side).
 #
@@ -23,10 +23,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - snap2spoon-__LB_IP__.nip.io
+        - snap2spoon-${LB_IP}.nip.io
       secretName: snap2spoon-tls
   rules:
-    - host: snap2spoon-__LB_IP__.nip.io
+    - host: snap2spoon-${LB_IP}.nip.io
       http:
         paths:
           - path: /
