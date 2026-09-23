@@ -13,6 +13,8 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
   const [recipe, setRecipe] = useState<Recipe>(initial);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function rate(score: number) {
     if (!token) return;
@@ -36,14 +38,19 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
     }
   }
 
+  // Confirmation is inline rather than window.confirm(): embedded browsers
+  // (Instagram's in-app browser, webviews) suppress native dialogs and make
+  // confirm() return false, which silently cancelled the delete.
   async function deleteRecipe() {
     if (!token) return;
-    if (!window.confirm("Delete this recipe? This can't be undone.")) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await api.deleteRecipe(recipe.id, token);
       router.push("/dashboard");
-    } finally {
+      router.refresh();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Delete failed");
       setDeleting(false);
     }
   }
@@ -96,15 +103,24 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
             Original video ↗
           </a>
           {user && user.id === recipe.owner_id && (
-            <button
-              onClick={deleteRecipe}
-              disabled={deleting}
-              className="btn-ghost text-red-600"
-            >
-              {deleting ? "Deleting…" : "Delete recipe"}
-            </button>
+            confirmingDelete ? (
+              <span className="flex items-center gap-2 text-sm">
+                <span className="text-ink/70">Delete this recipe? This can&apos;t be undone.</span>
+                <button onClick={deleteRecipe} disabled={deleting} className="btn-ghost text-red-600">
+                  {deleting ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button onClick={() => setConfirmingDelete(false)} disabled={deleting} className="btn-ghost">
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              <button onClick={() => setConfirmingDelete(true)} className="btn-ghost text-red-600">
+                Delete recipe
+              </button>
+            )
           )}
         </div>
+        {deleteError && <p className="mt-2 text-sm text-red-600">{deleteError}</p>}
 
         <section className="mt-8">
           <h2 className="font-display text-2xl">Ingredients</h2>
