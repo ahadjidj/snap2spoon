@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 import RatingStars from "./RatingStars";
 import Comments from "./Comments";
+import CookingMode from "./CookingMode";
 
 export default function RecipeView({ initial }: { initial: Recipe }) {
   const { user, token } = useAuth();
@@ -15,6 +16,7 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [cooking, setCooking] = useState(false);
 
   async function rate(score: number) {
     if (!token) return;
@@ -87,6 +89,11 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-4">
+          {recipe.steps.length > 0 && (
+            <button onClick={() => setCooking(true)} className="btn-primary">
+              👩‍🍳 Start cooking
+            </button>
+          )}
           <RatingStars value={recipe.avg_rating} count={recipe.rating_count} readOnly />
           {user ? (
             <div className="flex items-center gap-3">
@@ -164,6 +171,8 @@ export default function RecipeView({ initial }: { initial: Recipe }) {
 
         <Comments recipeId={recipe.id} />
       </div>
+
+      {cooking && <CookingMode recipe={recipe} onClose={() => setCooking(false)} />}
     </article>
   );
 }
